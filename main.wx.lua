@@ -1,2 +1,4 @@
-logics = require("logic")
-logics.window()
+userInterface = require("interface")
+userInterface.window()
+
+wx.wxGetApp():MainLoop()
