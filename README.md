@@ -1,5 +1,5 @@
 # Trivia-Game
-Projeto do jogo da disciplina de Linguagens da Programação
+Projeto do jogo de Trivia em wxLua, da disciplina de Linguagens da Programação
 
 Log in no game:
     * Janelinha wxLua com 2 campos para usuarioe ip do servidor
