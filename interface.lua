@@ -1,11 +1,11 @@
 require("wx")
 
-local logic = {}
+local interface = {}
 
-function logic.window()
+function interface.window()
    
    -- Paleta de cores da janela
-   azul = wx.wxColour(0, 0, 110)
+   azul = wx.wxColour(100, 100, 200)
    branco = wx.wxColour(255, 255, 255)
 
    -- Fontes de escrita
@@ -15,10 +15,10 @@ function logic.window()
    frame = wx.wxFrame( -- Janela contendo endereço, ID, título, posição, tamanho e estilo
       wx.NULL,
       wx.wxID_ANY,
-      "Jogo da forca sem a forca",
+      "Lobby",
       wx.wxDefaultPosition,
-      wx.wxSize(640, 480),
-      wx.wxDEFAULT_FRAME_STYLE
+      wx.wxSize(205, 255),
+      wx.wxSYSTEM_MENU + wx.wxCAPTION + wx.wxCLOSE_BOX + wx.wxMINIMIZE_BOX
    )
    panel = wx.wxPanel(frame, wx.wxID_ANY) -- Painel incluso na janela e seu ID
 
@@ -35,8 +35,15 @@ function logic.window()
    
    -- Muda a cor do plano de fundo
    cor = frame:GetChildren():Item(0):GetData():DynamicCast("wxWindow"):SetBackgroundColour(azul)
-
+   
    frame:Show(true) -- Mostra a janela
+
+   frame:Connect(wx.wxEVT_CLOSE_WINDOW, OnQuit)
 end
 
-return logic
+function OnQuit(event)
+   event:Skip()
+   wx.wxMessageBox("Arrivederci\n", "Exit Message", wx.wxOK + wx.wxICON_INFORMATION)
+end
+
+return interface
