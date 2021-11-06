@@ -1,4 +1,5 @@
 userInterface = require("interface")
-userInterface.window()
+userInterface.launcher()
+userInterface.game()
 
 wx.wxGetApp():MainLoop()
