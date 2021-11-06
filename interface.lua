@@ -16,8 +16,8 @@ font2 = wx.wxFont(11, wx.wxFONTFAMILY_DEFAULT, wx.wxFONTSTYLE_NORMAL, wx.wxFONTW
 font3 = wx.wxFont(10, wx.wxFONTFAMILY_DEFAULT, wx.wxFONTSTYLE_NORMAL, wx.wxFONTWEIGHT_NORMAL, false)
 
 function interface.launcher()
-   
-   frame = wx.wxFrame( -- Janela contendo endereço, ID, título, posição, tamanho e estilo
+   GUI_1 = {}
+   GUI_1.frame = wx.wxFrame( -- Janela contendo endereço, ID, título, posição, tamanho e estilo
       wx.NULL,
       wx.wxID_ANY,
       "Lobby",
@@ -25,52 +25,58 @@ function interface.launcher()
       wx.wxSize(230, 400),
       wx.wxSYSTEM_MENU + wx.wxCAPTION + wx.wxCLOSE_BOX + wx.wxMINIMIZE_BOX
    )
-   panel = wx.wxPanel(frame, wx.wxID_ANY) -- Painel incluso na janela e seu ID
+   GUI_1.frame:SetBackgroundColour(azul) -- Muda a cor do plano de fundo
 
    -- Caixa de texto para o nickname do usuário
-   txtUser = wx.wxStaticText(panel, wx.wxID_ANY, "Nickname: ", wx.wxPoint(10, 10))
-   txtUser:SetForegroundColour(branco)
-   txtUser:SetFont(font3)
-   txtUserInput = wx.wxTextCtrl(panel, wx.wxID_ANY, "", wx.wxPoint(10, 30), wx.wxSize(200, 25)):SetFont(font2)
+   GUI_1.txtUser = wx.wxStaticText(GUI_1.frame, wx.wxID_ANY, "Nickname: ", wx.wxPoint(10, 10))
+   GUI_1.txtUser:SetForegroundColour(branco)
+   GUI_1.txtUser:SetFont(font3)
+
+   GUI_1.txtUserInput = wx.wxTextCtrl(GUI_1.frame, wx.wxID_ANY, "", wx.wxPoint(10, 30), wx.wxSize(200, 25))
+   GUI_1.txtUserInput:SetFont(font2)
 
    -- Caixa de texto para o endereço do servidor
-   txtEnd = wx.wxStaticText(panel, wx.wxID_ANY, "Servidor (IP): ", wx.wxPoint(10, 60))
-   txtEnd:SetForegroundColour(branco)
-   txtEnd:SetFont(font3)
-   txtEndInput = wx.wxTextCtrl(panel, wx.wxID_ANY, "", wx.wxPoint(10, 80), wx.wxSize(200, 25)):SetFont(font2)
+   GUI_1.txtEnd = wx.wxStaticText(GUI_1.frame, wx.wxID_ANY, "Servidor (IP): ", wx.wxPoint(10, 60))
+   GUI_1.txtEnd:SetForegroundColour(branco)
+   GUI_1.txtEnd:SetFont(font3)
+
+   GUI_1.txtEndInput = wx.wxTextCtrl(GUI_1.frame, wx.wxID_ANY, "", wx.wxPoint(10, 80), wx.wxSize(200, 25))
+   GUI_1.txtEndInput:SetFont(font2)
    
    -- Um botão
-   button01 = wx.wxButton(panel, ID_CONNECT_BUTTON, "Conectar", wx.wxPoint(10, 120), wx.wxSize(100, 30)):SetFont(font)
+   GUI_1.button01 = wx.wxButton(GUI_1.frame, wx.wxID_ANY, "Conectar", wx.wxPoint(10, 120), wx.wxSize(100, 30), 0)
+   GUI_1.button01:SetFont(font)
    
    -- Lista com jogadores conectados
-   listPlayersText = wx.wxStaticText(panel, wx.wxID_ANY, "Jogadores conectados: ", wx.wxPoint(10, 160))
-   listPlayersText:SetForegroundColour(branco)
-   listPlayersText:SetFont(font3)
-   listPlayers = wx.wxListBox(panel, wx.wxID_ANY, wx.wxPoint(10, 180), wx.wxSize(200, 180)):SetFont(font2)
+   GUI_1.listPlayersText = wx.wxStaticText(GUI_1.frame, wx.wxID_ANY, "Jogadores conectados: ", wx.wxPoint(10, 160))
+   GUI_1.listPlayersText:SetForegroundColour(branco)
+   GUI_1.listPlayersText:SetFont(font3)
+   GUI_1.listPlayers = wx.wxListBox(GUI_1.frame, wx.wxID_ANY, wx.wxPoint(10, 180), wx.wxSize(200, 180))
+   GUI_1.listPlayers:SetFont(font2)
 
-   -- Muda a cor do plano de fundo
-   cor = frame:GetChildren():Item(0):GetData():DynamicCast("wxWindow"):SetBackgroundColour(azul)
+   -- Conexões com os eventos
+   GUI_1.frame:Connect(wx.wxEVT_CLOSE_WINDOW, OnQuit)
+   GUI_1.button01:Connect(wx.wxEVT_COMMAND_BUTTON_CLICKED, OnButton)
 
-   frame:Centre()
-   frame:Show(true) -- Mostra a janela
-
-   --frame:Connect(wx.wxEVT_CLOSE_WINDOW, OnQuit)
-   frame:Connect(ID_CONNECT_BUTTON, wx.wxEVT_COMMAND_BUTTON_CLICKED, OnButton)
+   GUI_1.frame:Centre() -- Centraliza a janela na tela
+   GUI_1.frame:Show(true) -- Mostra a janela
 end
 
 function OnQuit(event)
-   event:Skip()
    wx.wxMessageBox("Arrivederci\n", "Exit Message", wx.wxOK + wx.wxICON_INFORMATION)
+   event:Skip()
 end
 
 function OnButton(event)
+   GUI_1.listPlayers:Append(GUI_1.txtUserInput:GetValue())
    event:Skip()
-   
 end
 
-function interface.game()
 
-   frame = wx.wxFrame( -- Janela contendo endereço, ID, título, posição, tamanho e estilo
+
+function interface.game()
+   GUI_2 = {}
+   GUI_2.frame = wx.wxFrame( -- Janela contendo endereço, ID, título, posição, tamanho e estilo
       wx.NULL,
       wx.wxID_ANY,
       "Trivia Game!",
@@ -78,19 +84,21 @@ function interface.game()
       wx.wxSize(600, 500),
       wx.wxSYSTEM_MENU + wx.wxCAPTION + wx.wxCLOSE_BOX + wx.wxMINIMIZE_BOX
    )
+   GUI_2.frame:SetBackgroundColour(azul) -- Muda a cor do plano de fundo
 
-   panel = wx.wxPanel(frame, wx.wxID_ANY)
+   GUI_2.listChat = wx.wxListBox(GUI_2.frame, wx.wxID_ANY, wx.wxPoint(300, 140), wx.wxSize(280, 280))
+   GUI_2.listChat:SetFont(font2)
 
-   listChat = wx.wxListBox(panel, wx.wxID_ANY, wx.wxPoint(300, 140), wx.wxSize(280, 280)):SetFont(font2)
-   txtChat = wx.wxTextCtrl(panel, wx.wxID_ANY, "", wx.wxPoint(300, 430), wx.wxSize(280, 25)):SetFont(font2)
+   GUI_2.txtChat = wx.wxTextCtrl(GUI_2.frame, wx.wxID_ANY, "", wx.wxPoint(300, 430), wx.wxSize(280, 25))
+   GUI_2.txtChat:SetFont(font2)
    
-   listPlayers = wx.wxListBox(panel, wx.wxID_ANY, wx.wxPoint(10, 10), wx.wxSize(280, 445)):SetFont(font2)
+   GUI_2.listPlayers = wx.wxListBox(GUI_2.frame, wx.wxID_ANY, wx.wxPoint(10, 10), wx.wxSize(280, 445))
+   GUI_2.listPlayers:SetFont(font2)
 
-   listGame = wx.wxListBox(panel, wx.wxID_ANY, wx.wxPoint(300, 10), wx.wxSize(280, 100)):SetFont(font2)
+   GUI_2.listGame = wx.wxListBox(GUI_2.frame, wx.wxID_ANY, wx.wxPoint(300, 10), wx.wxSize(280, 100))
+   GUI_2.listGame:SetFont(font2)
 
-   cor = frame:GetChildren():Item(0):GetData():DynamicCast("wxWindow"):SetBackgroundColour(azul)
-
-   frame:Show(true) -- Mostra a janela
+   GUI_2.frame:Show(true) -- Mostra a janela
 end
 
 return interface
