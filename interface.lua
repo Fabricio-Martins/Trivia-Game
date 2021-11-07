@@ -55,7 +55,7 @@ function interface.launcher()
    GUI_1.listPlayers:SetFont(font2)
 
    -- Conexões com os eventos
-   GUI_1.frame:Connect(wx.wxEVT_CLOSE_WINDOW, OnQuit)
+   --GUI_1.frame:Connect(wx.wxEVT_CLOSE_WINDOW, OnQuit)
    GUI_1.button01:Connect(wx.wxEVT_COMMAND_BUTTON_CLICKED, OnButton)
 
    GUI_1.frame:Centre() -- Centraliza a janela na tela
@@ -69,10 +69,9 @@ end
 
 function OnButton(event)
    GUI_1.listPlayers:Append(GUI_1.txtUserInput:GetValue())
+   GUI_1.txtUserInput:SetValue("")
    event:Skip()
 end
-
-
 
 function interface.game()
    GUI_2 = {}
@@ -98,7 +97,15 @@ function interface.game()
    GUI_2.listGame = wx.wxListBox(GUI_2.frame, wx.wxID_ANY, wx.wxPoint(300, 10), wx.wxSize(280, 100))
    GUI_2.listGame:SetFont(font2)
 
+   GUI_2.txtChat:Connect(wx.wxEVT_COMMAND_TEXT_ENTER, OnSend)
+
    GUI_2.frame:Show(true) -- Mostra a janela
+end
+
+function OnSend(event)
+   GUI_2.listChat:Append(GUI_2.txtChat:GetValue())
+   GUI_2.txtChat:SetValue("")
+   event:Skip()
 end
 
 return interface
