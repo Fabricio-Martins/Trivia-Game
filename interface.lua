@@ -17,6 +17,7 @@ font3 = wx.wxFont(10, wx.wxFONTFAMILY_DEFAULT, wx.wxFONTSTYLE_NORMAL, wx.wxFONTW
 
 function interface.launcher()
    GUI_1 = {}
+   local parametrosConexao = {}
    GUI_1.frame = wx.wxFrame( -- Janela contendo endereço, ID, título, posição, tamanho e estilo
       wx.NULL,
       wx.wxID_ANY,
@@ -55,11 +56,13 @@ function interface.launcher()
    GUI_1.listPlayers:SetFont(font2)
 
    -- Conexões com os eventos
-   --GUI_1.frame:Connect(wx.wxEVT_CLOSE_WINDOW, OnQuit)
-   GUI_1.button01:Connect(wx.wxEVT_COMMAND_BUTTON_CLICKED, OnButton)
+   GUI_1.frame:Connect(wx.wxEVT_CLOSE_WINDOW, OnQuit)
+   GUI_1.button01:Connect(wx.wxEVT_COMMAND_BUTTON_CLICKED, OnButton(parametrosConexao))
 
    GUI_1.frame:Centre() -- Centraliza a janela na tela
    GUI_1.frame:Show(true) -- Mostra a janela
+
+   return parametrosConexao[1], parametrosConexao[2]
 end
 
 function OnQuit(event)
@@ -67,11 +70,30 @@ function OnQuit(event)
    event:Skip()
 end
 
-function OnButton(event)
-   GUI_1.listPlayers:Append(GUI_1.txtUserInput:GetValue())
-   GUI_1.txtUserInput:SetValue("")
+function OnButton(event, param)
    event:Skip()
+
+   local nickname = GUI_1.txtUserInput:GetValue()
+   local address = GUI_1.txtEndInput:GetValue()
+
+   if nickname == "" or address == "" then
+      wx.wxMessageBox("Nickname ou endereço ip inválidos!\n", "Erro", wx.wxOK + wx.wxICON_ERROR)
+   else
+      table.insert(param, nickname)
+      table.insert(param, address)
+      GUI_1.frame:Close(true)
+   end
 end
+
+function interface.erroServer()
+   wx.wxMessageBox("Não foi possível conectar-se ao servidor!\n", "Erro", wx.wxOK + wx.wxICON_ERROR)
+end
+
+function interface.erroNickname()
+   wx.wxMessageBox("Já existe uma pessoa com este apelido neste servidor. Por favor escolha outro.\n", "Erro", wx.wxOK + wx.wxICON_ERROR)
+end
+
+
 
 function interface.game()
    GUI_2 = {}
@@ -85,8 +107,7 @@ function interface.game()
    )
    GUI_2.frame:SetBackgroundColour(azul) -- Muda a cor do plano de fundo
 
-   GUI_2.listChat = wx.wxListBox(GUI_2.frame, wx.wxID_ANY, wx.wxPoint(300, 140), wx.wxSize(280, 280))
-   GUI_2.listChat:SetFont(font2)
+   GUI_2.HtmlListBox = wx.wxSimpleHtmlListBox(GUI_2.frame, wx.wxID_ANY, wx.wxPoint(300, 140), wx.wxSize(280, 280), wx.wxArrayString, wx.wxHLB_DEFAULT_STYLE, wx.wxDefaultValidator, "UmNome")
 
    GUI_2.txtChat = wx.wxTextCtrl(GUI_2.frame, wx.wxID_ANY, "", wx.wxPoint(300, 430), wx.wxSize(280, 25))
    GUI_2.txtChat:SetFont(font2)
@@ -98,12 +119,12 @@ function interface.game()
    GUI_2.listGame:SetFont(font2)
 
    GUI_2.txtChat:Connect(wx.wxEVT_COMMAND_TEXT_ENTER, OnSend)
-
+   
    GUI_2.frame:Show(true) -- Mostra a janela
 end
 
 function OnSend(event)
-   GUI_2.listChat:Append(GUI_2.txtChat:GetValue())
+   GUI_2.HtmlListBox:Append(GUI_2.txtChat:GetValue())
    GUI_2.txtChat:SetValue("")
    event:Skip()
 end
