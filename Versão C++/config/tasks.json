@@ -1,0 +1,75 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "cppbuild",
+			"label": "Debug",
+			"command": "C:\\MinGW\\bin\\g++.exe",
+			"args": [
+				"-fdiagnostics-color=always",
+				"-g",
+				"${workspaceFolder}\\src\\*.cpp",
+				"-o",
+				"${workspaceFolder}\\build\\debug\\${fileBasenameNoExtension}.exe",
+				"-I",
+				"${workspaceFolder}\\include",
+				"-I",
+				"C:\\Program Files (x86)\\wxWidgets\\include\\wx-3.1",
+				"-I",
+				"C:\\Program Files (x86)\\wxWidgets\\lib\\wx\\include\\msw-unicode-3.1",
+				"-L",
+				"C:\\Program Files (x86)\\wxWidgets\\lib",
+				"-l",
+				"wx_mswud_core-3.1.dll",
+				"-l",
+				"wx_baseud-3.1.dll",
+				
+			],
+			"options": {
+				"cwd": "${workspaceFolder}"
+			},
+			"problemMatcher": [
+				"$gcc"
+			],
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			},
+			"detail": "compilador: C:\\MinGW\\bin\\g++.exe"
+		},
+		{
+			"type": "cppbuild",
+			"label": "Release",
+			"command": "C:\\MinGW\\bin\\g++.exe",
+			"args": [
+				"${workspaceFolder}\\src\\*.cpp",
+				"-o",
+				"${workspaceFolder}\\build\\release\\${fileBasenameNoExtension}.exe",
+				"-I",
+				"${workspaceFolder}\\include",
+				"-I",
+				"C:\\Program Files (x86)\\wxWidgets\\include\\wx-3.1",
+				"-I",
+				"C:\\Program Files (x86)\\wxWidgets\\lib\\wx\\include\\msw-unicode-3.1",
+				"-L",
+				"C:\\Program Files (x86)\\wxWidgets\\lib",
+				"-l",
+				"wx_mswu_core-3.1.dll",
+				"-l",
+				"wx_baseu-3.1.dll",
+				
+			],
+			"options": {
+				"cwd": "${workspaceFolder}"
+			},
+			"problemMatcher": [
+				"$gcc"
+			],
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			},
+			"detail": "compilador: C:\\MinGW\\bin\\g++.exe"
+		}
+	]
+}
