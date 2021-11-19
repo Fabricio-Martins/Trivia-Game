@@ -2,7 +2,7 @@ import socket
 import threading
 
 # Endereço IP do servidor
-HOST = '127.0.0.1'
+HOST = '127.0.0.1' # conexão com locahhost
 PORT = 50000
 
 # Definição da classe jogador
@@ -69,10 +69,9 @@ def main():
         # Estabelece conexão com o cliente e o registra no servidor
         conn, addr = sock.accept()
         ip, prt = addr
+        print(f'Usuário de IP {ip}:{prt} conectou-se ao servidor!')
         
         nickname = conn.recv(1024).decode()
-        print(f'Usuário {nickname} de IP {ip}:{prt} conectou-se ao servidor!')
-        
         if jogadores:
             for i in range(len(jogadores)):
                 if nickname in jogadores[i].getNickname(): 
