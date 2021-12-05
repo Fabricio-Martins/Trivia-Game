@@ -6,32 +6,85 @@ from gi.repository import Gtk
 class Main(Gtk.Window):
     def __init__(self):
         self.builder = Gtk.Builder()
-        self.builder.add_from_file("interface.glade")
+        self.builder.add_from_file("interface.glade") # Constrói a partir do arquivo glade desejado
         self.builder.connect_signals(self) # Conecta os eventos criados no Glade
 
-        self.players = self.builder.get_object("treeView_players") # Pega o objeto de listagem dos players
+        # Pega os objetos do glade
+        self.launcherWindow = self.builder.get_object("launcher") # Obtém o janela desejada no glade pelo ID
+        self.players = self.builder.get_object("treeView_players") # Obtém a lista dos jogadores
+        self.nickname_entry = self.builder.get_object("entry_nickname") # Obtém a entrada do nickname
+        self.adress_entry = self.builder.get_object("entry_adress") # Obtém a entrada do endereço
+
+        # Pega os objetos do game
+        self.gameWindow = self.builder.get_object("game") # Obtém a janela do game
+        self.chat_entry = self.builder.get_object("entry_chat") # Obtém a entrada do chat
+        self.chat_text = self.builder.get_object("textView_chat") # Obtém o texto do chat
+        self.score = self.builder.get_object("treeView_score") # Obtém a lista dos jogadores
+
+        # Pega a mensagem de erro
+        self.error_message = self.builder.get_object("message_error")
 
         # Definem como os dados devem ser mostrados nas linhas da lista
         self.players.append_column(Gtk.TreeViewColumn(title = "Nicknames", cell_renderer = Gtk.CellRendererText(), text = 0))
         self.players.append_column(Gtk.TreeViewColumn(title = "Status", cell_renderer = Gtk.CellRendererText(), text = 1))
 
-        self.playersStore = Gtk.ListStore(str, str) # Um modelo das colunas verticais da lista
+        # Um modelo das colunas verticais da lista
+        self.playersStore = Gtk.ListStore(str, str) 
         self.players.set_model(self.playersStore)
-        treeiter = self.playersStore.append(["Warcake", "Conectado"])
-        treeiter = self.playersStore.append(["BlakeZero", "Conectado"])
-        treeiter = self.playersStore.append(["Ortomis", "Conectando..."])
-        treeiter = self.playersStore.append(["Harupopo", "Desconectado"])
 
-        window = self.builder.get_object("launcher") # Pega o janela desejada no glade pelo ID
-        window.connect("delete-event", Gtk.main_quit) # Viabiliza fechar o processo com o X
-        window.show() # Mostra a janela
+        # Adicionam linhas na lista (feito para teste)
+        # treeiter = self.playersStore.append(["Warcake", "Conectado"])
+        # treeiter = self.playersStore.append(["BlakeZero", "Conectado"])
+        # treeiter = self.playersStore.append(["Ortomis", "Conectando..."])
+        # treeiter = self.playersStore.append(["Harupopo", "Desconectado"])
+        
+        self.launcherWindow.connect("delete-event", Gtk.main_quit) # Viabiliza fechar o processo com o X
+        self.launcherWindow.show() # Mostra a janela
 
-    # Função para testar eventos, simplesmente imprime no terminal o que é digitado na entry
-    def printText(self, widget):
-        input = self.builder.get_object("entry_nickname")
-        text = input.get_text().strip()
-        print(text)
-        input.set_text("")
+    def onConnect(self, widget):
+        self.nickname = self.nickname_entry.get_text().strip()
+        self.adress = self.adress_entry.get_text().strip()
+        if self.nickname == "" or self.adress == "":
+            self.error_message.show()
+            return
+        
+        # bagui do server, só que em Python
+        # local ip, port = t_utils.separadorEndereco(address, ':')
+        # local socket = require("socket")
+        # local tcp = assert(socket.tcp())
+        # tcp:connect(ip, port)
+
+        # if jogo começou precipitadamente, quantia de jogadores máxima chegou ou o tempo de conexão acabou
+        
+        self.builder.add_from_file("interface.glade")  
+        self.builder.connect_signals(self)
+
+        # Lembrar de desabilitar o botão de conexão, e só mostra a tela assim que todos jogadores estiverem conectados
+        treeiter = self.playersStore.append([self.nickname, "Conectado"]) # Mostra o jogador na lista
+
+        self.chat_text.set_editable(False) # Desabilita a edição do text view, dessa forma só é possível pelo entry
+        self.chat_text.set_wrap_mode(3) # Corta as mensagens no canto direito do text view
+        self.chat_buffer = self.chat_text.get_buffer()
+        self.chat_buffer.set_text("Início do chat\n")
+
+        self.score.append_column(Gtk.TreeViewColumn(title = "Nicknames", cell_renderer = Gtk.CellRendererText(), text = 0))
+        self.score.append_column(Gtk.TreeViewColumn(title = "Pontuação", cell_renderer = Gtk.CellRendererText(), text = 1))
+        self.scoreStore = Gtk.ListStore(str, int)
+        self.score.set_model(self.scoreStore)
+        treeiter = self.scoreStore.append([self.nickname, 0]) # Mostra o jogador na lista
+
+        self.gameWindow.show()
+
+    # Esconde o error_message ao clicar em ok
+    def on_ok_clicked(self, widget):
+        self.error_message.hide()
+
+    # Manda o input da entry para o chat
+    def on_enter(self, widget):
+        message = self.chat_entry.get_text().strip()
+        self.chat_entry.set_text("")
+        textiter = self.chat_buffer.get_end_iter() # Move o iterador para o final do chat
+        self.chat_buffer.insert(textiter, self.nickname + ": " + message + "\n") # Adiciona uma nova mensagem no final do chat
 
 # Loop principal da interface
 if __name__ == '__main__':
