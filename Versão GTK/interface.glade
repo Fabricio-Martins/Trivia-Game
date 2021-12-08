@@ -32,9 +32,6 @@
                   <object class="GtkTreeView" id="treeView_score">
                     <property name="visible">True</property>
                     <property name="can-focus">True</property>
-                    <child internal-child="selection">
-                      <object class="GtkTreeSelection"/>
-                    </child>
                   </object>
                 </child>
               </object>
@@ -81,7 +78,7 @@
               </packing>
             </child>
             <child>
-              <object class="GtkScrolledWindow">
+              <object class="GtkScrolledWindow" id="scroll_chat">
                 <property name="visible">True</property>
                 <property name="can-focus">True</property>
                 <property name="margin-start">5</property>
