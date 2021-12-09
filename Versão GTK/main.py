@@ -1,12 +1,11 @@
 import gi
 import socket
 import threading
-import cliente
-import servidor
 
 gi.require_version('Gtk', '3.0')
-from gi.repository import Gtk
+from gi.repository import Gtk, GObject
 
+#GObject.threads_init()
 class Main(Gtk.Window):
     def __init__(self):
         self.builder = Gtk.Builder()
@@ -36,6 +35,10 @@ class Main(Gtk.Window):
         self.playersStore = Gtk.ListStore(str, str) 
         self.players.set_model(self.playersStore)
 
+
+        self.chat_text.set_editable(False) # Desabilita a edição do text view, dessa forma só é possível pelo entry
+        self.chat_text.set_wrap_mode(3) # Corta as mensagens no canto direito do text view
+        self.chat_buffer = self.chat_text.get_buffer()
         # Adicionam linhas na lista (feito para teste)
         # treeiter = self.playersStore.append(["Warcake", "Conectado"])
         
@@ -49,12 +52,7 @@ class Main(Gtk.Window):
         if self.nickname == "" or self.adress == "": # Caso o nickname/endereço esteja incorreto, envia erro
             self.error_message.show()
             return
-
-        HOST, PORT = self.adress.split(':')
-        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.sock.connect((HOST, PORT))
-
-        self.sock.send(str.encode(self.nickname))
+        else: socket_connect(self)
         # if jogo começou precipitadamente, quantia de jogadores máxima chegou ou o tempo de conexão acabou
         
         self.builder.add_from_file("interface.glade")  
@@ -63,9 +61,7 @@ class Main(Gtk.Window):
         # Lembrar de desabilitar o botão de conexão, e só mostra a tela assim que todos jogadores estiverem conectados
         treeiter = self.playersStore.append([self.nickname, "Conectado"]) # Mostra o jogador na lista
 
-        self.chat_text.set_editable(False) # Desabilita a edição do text view, dessa forma só é possível pelo entry
-        self.chat_text.set_wrap_mode(3) # Corta as mensagens no canto direito do text view
-        self.chat_buffer = self.chat_text.get_buffer()
+        
         self.chat_buffer.set_text("Início do chat\n")
         self.end_iter = self.chat_buffer.get_end_iter() # Pega o ultimo iterador do chat
 
@@ -76,7 +72,7 @@ class Main(Gtk.Window):
         treeiter = self.scoreStore.append([self.nickname, 0]) # Mostra o jogador na lista
 
         self.gameWindow.show()
-
+        
     # Esconde o error_message ao clicar em ok
     def on_ok_clicked(self, widget):
         self.error_message.hide()
@@ -85,24 +81,39 @@ class Main(Gtk.Window):
     def on_enter(self, widget):
         message = self.chat_entry.get_text().strip()
         self.chat_entry.set_text("")
-        self.socket_send(message)
-        self.end_mark = self.chat_buffer.create_mark("", self.end_iter, False) # Marcação do ultimo iterador do chat
-        self.chat_text.scroll_to_mark(self.end_mark, 0, False, 0, 0) # Move o scroll para o final
+        socket_send(self.sock, self.chat_buffer, self.nickname, message)
+        #self.end_mark = self.chat_buffer.create_mark("", self.end_iter, False) # Marcação do ultimo iterador do chat
+        #self.chat_text.scroll_to_mark(self.end_mark, 0, False, 0, 0) # Move o scroll para o final
 
-    def socket_recv(self):
-        while True:
-            try:
-                message = self.sock.recv(1024).decode()
-                self.chat_buffer.insert(self.end_iter, message + "\n") # Adiciona uma nova mensagem no final do chat
-            except:
-                print("Você foi desconectado do servidor")
-                self.sock.close()
-                break
+def socket_connect(self):
+    HOST, PORT = self.adress.split(':')
+    PORT = int(PORT)
+    self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    self.sock.connect((HOST, PORT))
 
-    def socket_send(self, message_input):
-        message = '{}: {}'.format(self.nickname, message_input(''))
-        self.sock.send(str.encode(message))
-        self.chat_buffer.insert(self.end_iter, message + "\n") # Adiciona uma nova mensagem no final do chat
+    self.sock.send(str.encode(self.nickname))
+
+    thread = threading.Thread(target=socket_recv, args=(self.sock, self.chat_buffer))
+    thread.start()
+
+def socket_recv(socket, buffer):
+    while True:
+        try:
+            message = socket.recv(1024).decode()
+            end_iter = buffer.get_end_iter()
+            buffer.insert(end_iter, message + "\n") # Adiciona uma nova mensagem no final do chat
+            while Gtk.events_pending():
+                Gtk.main_iteration()
+        except:
+            print("Você foi desconectado do servidor")
+            socket.close()
+            break
+
+def socket_send(socket, buffer, nickname, message_input):
+    message = '{}: {}'.format(nickname, message_input)
+    socket.send(str.encode(message))
+    end_iter = buffer.get_end_iter()
+    buffer.insert(end_iter, message + "\n") # Adiciona uma nova mensagem no final do chat
 
 # Loop principal da interface
 if __name__ == '__main__':
