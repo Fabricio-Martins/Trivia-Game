@@ -23,6 +23,7 @@ class Main(Gtk.Window):
         self.gameWindow = self.builder.get_object("game") # Obtém a janela do game
         self.chat_entry = self.builder.get_object("entry_chat") # Obtém a entrada do chat
         self.chat_text = self.builder.get_object("textView_chat") # Obtém o texto do chat
+        self.game_text = self.builder.get_object("textView_game") # Obtém o texto do chat
         self.score = self.builder.get_object("treeView_score") # Obtém a lista dos jogadores
 
         # Pega as janelas de diálogo
@@ -37,10 +38,17 @@ class Main(Gtk.Window):
         self.playersStore = Gtk.ListStore(str, str) 
         self.players.set_model(self.playersStore)
 
-
+        # Text view do chat
         self.chat_text.set_editable(False) # Desabilita a edição do text view, dessa forma só é possível pelo entry
         self.chat_text.set_wrap_mode(3) # Corta as mensagens no canto direito do text view
         self.chat_buffer = self.chat_text.get_buffer()
+
+        # Text view do jogo
+        self.game_text.set_editable(False) # Desabilita a edição do text view, dessa forma só é possível pelo entry
+        self.game_text.set_wrap_mode(3) # Corta as mensagens no canto direito do text view
+        self.game_buffer = self.game_text.get_buffer()
+        self.game_buffer.set_text("Tema: \n Pista: \n")
+
         # Adicionam linhas na lista (feito para teste)
         # treeiter = self.playersStore.append(["Warcake", "Conectado"])
         
@@ -61,7 +69,7 @@ class Main(Gtk.Window):
         self.builder.connect_signals(self)
 
         # Lembrar de desabilitar o botão de conexão, e só mostra a tela assim que todos jogadores estiverem conectados
-        treeiter = self.playersStore.append([self.nickname, "Conectado"]) # Mostra o jogador na lista
+        #treeiter = self.playersStore.append([self.nickname, "Conectado"]) # Mostra o jogador na lista
 
         
         self.chat_buffer.set_text("Início do chat\n")
@@ -71,7 +79,7 @@ class Main(Gtk.Window):
         self.score.append_column(Gtk.TreeViewColumn(title = "Pontuação", cell_renderer = Gtk.CellRendererText(), text = 1))
         self.scoreStore = Gtk.ListStore(str, int)
         self.score.set_model(self.scoreStore)
-        treeiter = self.scoreStore.append([self.nickname, 0]) # Mostra o jogador na lista
+        #treeiter = self.scoreStore.append([self.nickname, 0]) # Mostra o jogador na lista
 
         self.gameWindow.show()
         
@@ -95,7 +103,6 @@ class Main(Gtk.Window):
 
     # Fecha a conexão com o socket e manda uma mensagem
     def on_delete(self, widget, data):
-        socket_close(self.sock)
         self.disconnect_message.show()
 
 
@@ -107,16 +114,24 @@ def socket_connect(self):
 
     self.sock.send(str.encode(self.nickname))
 
-    self.thread = threading.Thread(target=socket_recv, args=(self.sock, self.chat_buffer))
+    self.thread = threading.Thread(target=socket_recv, args=(self.sock, self.chat_buffer, self.playersStore))
     self.thread.daemon = True
     self.thread.start()
 
-def socket_recv(socket, buffer):
+
+def socket_recv(socket, buffer, players):
     while True:
         try:
-            message = socket.recv(1024).decode()
-            end_iter = buffer.get_end_iter()
-            buffer.insert(end_iter, message + "\n") # Adiciona uma nova mensagem no final do chat
+            msg = socket.recv(1024).decode()
+            message, type = msg.split('#')
+
+            if type == "NICK_TYPE":
+                players.append([message, "Conectado"]) # Mostra o jogador na lista
+
+            if type == "CHAT_TYPE":
+                end_iter = buffer.get_end_iter()
+                buffer.insert(end_iter, message + "\n") # Adiciona uma nova mensagem no final do chat
+
             while Gtk.events_pending():
                 Gtk.main_iteration()
         except:
@@ -125,11 +140,8 @@ def socket_recv(socket, buffer):
             break
 
 def socket_send(socket, nickname, message_input):
-    message = '{}: {}'.format(nickname, message_input)
+    message = '{}: {}#CHAT_TYPE'.format(nickname, message_input)
     socket.send(str.encode(message))
-
-def socket_close(socket):
-    socket.close()
 
 # Loop principal da interface
 if __name__ == '__main__':
