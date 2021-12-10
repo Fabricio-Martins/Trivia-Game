@@ -1,11 +1,12 @@
 import gi
 import socket
 import threading
+import time
+import sys
 
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk, GObject
 
-#GObject.threads_init()
 class Main(Gtk.Window):
     def __init__(self):
         self.builder = Gtk.Builder()
@@ -24,8 +25,9 @@ class Main(Gtk.Window):
         self.chat_text = self.builder.get_object("textView_chat") # Obtém o texto do chat
         self.score = self.builder.get_object("treeView_score") # Obtém a lista dos jogadores
 
-        # Pega a mensagem de erro
+        # Pega as janelas de diálogo
         self.error_message = self.builder.get_object("message_error")
+        self.disconnect_message = self.builder.get_object("disconnect_message")
 
         # Definem como os dados devem ser mostrados nas linhas da lista
         self.players.append_column(Gtk.TreeViewColumn(title = "Nicknames", cell_renderer = Gtk.CellRendererText(), text = 0))
@@ -74,16 +76,28 @@ class Main(Gtk.Window):
         self.gameWindow.show()
         
     # Esconde o error_message ao clicar em ok
-    def on_ok_clicked(self, widget):
+    def on_ok_error(self, widget):
         self.error_message.hide()
+
+    def on_ok_disconnect(self, widget):
+        sys.exit()
+
+    def on_exit_disconnect(self, widget, data):
+        sys.exit()
 
     # Manda o input da entry para o chat
     def on_enter(self, widget):
         message = self.chat_entry.get_text().strip()
         self.chat_entry.set_text("")
-        socket_send(self.sock, self.chat_buffer, self.nickname, message)
+        socket_send(self.sock, self.nickname, message)
         #self.end_mark = self.chat_buffer.create_mark("", self.end_iter, False) # Marcação do ultimo iterador do chat
         #self.chat_text.scroll_to_mark(self.end_mark, 0, False, 0, 0) # Move o scroll para o final
+
+    # Fecha a conexão com o socket e manda uma mensagem
+    def on_delete(self, widget, data):
+        socket_close(self.sock)
+        self.disconnect_message.show()
+
 
 def socket_connect(self):
     HOST, PORT = self.adress.split(':')
@@ -93,8 +107,9 @@ def socket_connect(self):
 
     self.sock.send(str.encode(self.nickname))
 
-    thread = threading.Thread(target=socket_recv, args=(self.sock, self.chat_buffer))
-    thread.start()
+    self.thread = threading.Thread(target=socket_recv, args=(self.sock, self.chat_buffer))
+    self.thread.daemon = True
+    self.thread.start()
 
 def socket_recv(socket, buffer):
     while True:
@@ -109,11 +124,12 @@ def socket_recv(socket, buffer):
             socket.close()
             break
 
-def socket_send(socket, buffer, nickname, message_input):
+def socket_send(socket, nickname, message_input):
     message = '{}: {}'.format(nickname, message_input)
     socket.send(str.encode(message))
-    end_iter = buffer.get_end_iter()
-    buffer.insert(end_iter, message + "\n") # Adiciona uma nova mensagem no final do chat
+
+def socket_close(socket):
+    socket.close()
 
 # Loop principal da interface
 if __name__ == '__main__':
