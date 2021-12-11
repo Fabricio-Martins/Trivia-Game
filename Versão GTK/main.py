@@ -26,6 +26,13 @@ class Main(Gtk.Window):
         self.game_text = self.builder.get_object("textView_game") # Obtém o texto do chat
         self.score = self.builder.get_object("treeView_score") # Obtém a lista dos jogadores
 
+        # Pega os objetos do turno
+        self.turnWindow = self.builder.get_object("turn")
+        self.theme_entry = self.builder.get_object("entry_theme") # Obtém a entrada do tema
+        self.tip_entry = self.builder.get_object("entry_tip") # Obtém a entrada da dica
+        self.answer_entry = self.builder.get_object("entry_answer") # Obtém a entrada da resposta
+        self.word
+
         # Pega as janelas de diálogo
         self.error_message = self.builder.get_object("message_error")
         self.disconnect_message = self.builder.get_object("disconnect_message")
@@ -34,9 +41,12 @@ class Main(Gtk.Window):
         self.players.append_column(Gtk.TreeViewColumn(title = "Nicknames", cell_renderer = Gtk.CellRendererText(), text = 0))
         self.players.append_column(Gtk.TreeViewColumn(title = "Status", cell_renderer = Gtk.CellRendererText(), text = 1))
 
-        # Um modelo das colunas verticais da lista
-        self.playersStore = Gtk.ListStore(str, str) 
-        self.players.set_model(self.playersStore)
+        # Modelos das colunas verticais da lista
+        self.players_store = Gtk.ListStore(str, str) 
+        self.players.set_model(self.players_store)
+
+        self.score_store = Gtk.ListStore(str, int)
+        self.score.set_model(self.score_store)
 
         # Text view do chat
         self.chat_text.set_editable(False) # Desabilita a edição do text view, dessa forma só é possível pelo entry
@@ -47,7 +57,7 @@ class Main(Gtk.Window):
         self.game_text.set_editable(False) # Desabilita a edição do text view, dessa forma só é possível pelo entry
         self.game_text.set_wrap_mode(3) # Corta as mensagens no canto direito do text view
         self.game_buffer = self.game_text.get_buffer()
-        self.game_buffer.set_text("Tema: \n Pista: \n")
+        self.game_buffer.set_text("Tema: \nPista: \n")
 
         # Adicionam linhas na lista (feito para teste)
         # treeiter = self.playersStore.append(["Warcake", "Conectado"])
@@ -77,8 +87,7 @@ class Main(Gtk.Window):
 
         self.score.append_column(Gtk.TreeViewColumn(title = "Nicknames", cell_renderer = Gtk.CellRendererText(), text = 0))
         self.score.append_column(Gtk.TreeViewColumn(title = "Pontuação", cell_renderer = Gtk.CellRendererText(), text = 1))
-        self.scoreStore = Gtk.ListStore(str, int)
-        self.score.set_model(self.scoreStore)
+        
         #treeiter = self.scoreStore.append([self.nickname, 0]) # Mostra o jogador na lista
 
         self.gameWindow.show()
@@ -105,6 +114,13 @@ class Main(Gtk.Window):
     def on_delete(self, widget, data):
         self.disconnect_message.show()
 
+    def on_turn_clicked(self, widget):
+        self.theme = self.theme_entry.get_text().strip()
+        self.tip = self.tip_entry.get_text().strip()
+        self.answer = self.answer_entry.get_text().strip()
+
+        self.word = self.answer + ":" + self.theme + ":" + self.tip
+
 
 def socket_connect(self):
     HOST, PORT = self.adress.split(':')
@@ -114,23 +130,42 @@ def socket_connect(self):
 
     self.sock.send(str.encode(self.nickname))
 
-    self.thread = threading.Thread(target=socket_recv, args=(self.sock, self.chat_buffer, self.playersStore))
+    self.thread = threading.Thread(target=socket_recv, args=(self.sock, self.chat_buffer, self.players_store, self.score_store, self.game_buffer, self.turn_window))
     self.thread.daemon = True
     self.thread.start()
 
 
-def socket_recv(socket, buffer, players):
+def socket_recv(socket, buffer, players, score, game, turn):
     while True:
         try:
             msg = socket.recv(1024).decode()
-            message, type = msg.split('#')
+            print(msg + "\n")
+            type, message = msg.split('#')
 
             if type == "NICK_TYPE":
-                players.append([message, "Conectado"]) # Mostra o jogador na lista
+                players.append([message, "Conectado"]) # Mostra o jogador na lista do launcher
+                print("Teste 1\n")
 
             if type == "CHAT_TYPE":
                 end_iter = buffer.get_end_iter()
                 buffer.insert(end_iter, message + "\n") # Adiciona uma nova mensagem no final do chat
+                print("Teste 2\n")
+
+            if type == "SCORE_TYPE":
+                nickname, points = message.split(':')
+                score.append([nickname, points]) # Mostra o nick e pontuação do jogador
+                print("Teste 3\n")
+
+            if type == "TURN_TYPE":
+                print("Teste 4\n")
+                if message == 'suavez':
+                    print("implementa isso aqui mano\n")
+                else:
+                    answer, theme, tip= message.split(":")
+                    underlines = ""
+                    for i in answer:
+                        underlines = underlines + "_ "
+                    game.set_text("Tema: {}\nPista: {}\nResposta: {}".format(theme, tip, underlines))
 
             while Gtk.events_pending():
                 Gtk.main_iteration()
@@ -140,7 +175,7 @@ def socket_recv(socket, buffer, players):
             break
 
 def socket_send(socket, nickname, message_input):
-    message = '{}: {}#CHAT_TYPE'.format(nickname, message_input)
+    message = 'CHAT_TYPE#{}: {}'.format(nickname, message_input)
     socket.send(str.encode(message))
 
 # Loop principal da interface
