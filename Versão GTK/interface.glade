@@ -454,6 +454,7 @@
   <object class="GtkWindow" id="turn">
     <property name="can-focus">False</property>
     <property name="title" translatable="yes">Sua vez!</property>
+    <property name="modal">True</property>
     <property name="window-position">center</property>
     <property name="default-width">250</property>
     <property name="default-height">250</property>
@@ -565,7 +566,7 @@
           </packing>
         </child>
         <child>
-          <object class="GtkButton" id="butto">
+          <object class="GtkButton" id="button_turn">
             <property name="label" translatable="yes">Iniciar Rodada</property>
             <property name="visible">True</property>
             <property name="can-focus">True</property>
@@ -575,6 +576,7 @@
             <property name="margin-start">5</property>
             <property name="margin-end">5</property>
             <property name="margin-bottom">10</property>
+            <signal name="clicked" handler="on_turn_clicked" swapped="no"/>
           </object>
           <packing>
             <property name="expand">False</property>
