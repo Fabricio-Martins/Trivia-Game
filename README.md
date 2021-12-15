@@ -1,2 +1,2 @@
 # Trivia-Game
-Projeto do jogo de Trivia em wxLua, da disciplina de Linguagens da Programação
+Projeto do jogo de Trivia em Python usando o kit de interface Gtk, da disciplina de Linguagens da Programação
