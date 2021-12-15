@@ -173,12 +173,40 @@
               </packing>
             </child>
             <child>
-              <object class="GtkProgressBar" id="progress_time">
+              <object class="GtkBox">
                 <property name="visible">True</property>
                 <property name="can-focus">False</property>
-                <property name="margin-start">5</property>
-                <property name="margin-end">5</property>
-                <property name="margin-bottom">5</property>
+                <child>
+                  <object class="GtkLabel" id="label_gameTimer">
+                    <property name="visible">True</property>
+                    <property name="can-focus">False</property>
+                    <property name="margin-start">5</property>
+                    <property name="margin-end">5</property>
+                    <property name="margin-bottom">5</property>
+                    <property name="label" translatable="yes">0</property>
+                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">True</property>
+                    <property name="position">0</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkProgressBar" id="progress_time">
+                    <property name="visible">True</property>
+                    <property name="can-focus">False</property>
+                    <property name="margin-left">5</property>
+                    <property name="margin-right">5</property>
+                    <property name="margin-start">5</property>
+                    <property name="margin-end">5</property>
+                    <property name="margin-bottom">5</property>
+                  </object>
+                  <packing>
+                    <property name="expand">True</property>
+                    <property name="fill">True</property>
+                    <property name="position">1</property>
+                  </packing>
+                </child>
               </object>
               <packing>
                 <property name="expand">False</property>
@@ -218,7 +246,7 @@
     <property name="resizable">False</property>
     <property name="window-position">center</property>
     <property name="default-width">225</property>
-    <property name="default-height">300</property>
+    <property name="default-height">350</property>
     <property name="icon-name">network-workgroup</property>
     <property name="gravity">center</property>
     <child>
@@ -293,16 +321,49 @@
           </packing>
         </child>
         <child>
-          <object class="GtkButton" id="button">
-            <property name="label" translatable="yes">Conectar-se</property>
+          <object class="GtkBox">
             <property name="visible">True</property>
-            <property name="can-focus">True</property>
-            <property name="receives-default">True</property>
-            <property name="halign">start</property>
-            <property name="margin-start">5</property>
-            <property name="margin-end">5</property>
-            <property name="margin-bottom">10</property>
-            <signal name="clicked" handler="onConnect" swapped="no"/>
+            <property name="can-focus">False</property>
+            <child>
+              <object class="GtkButton" id="button">
+                <property name="label" translatable="yes">Conectar-se</property>
+                <property name="visible">True</property>
+                <property name="can-focus">True</property>
+                <property name="receives-default">True</property>
+                <property name="halign">start</property>
+                <property name="margin-left">5</property>
+                <property name="margin-right">5</property>
+                <property name="margin-start">5</property>
+                <property name="margin-end">5</property>
+                <property name="margin-bottom">10</property>
+                <signal name="clicked" handler="onConnect" swapped="no"/>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">True</property>
+                <property name="position">0</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkButton" id="ready">
+                <property name="label" translatable="yes">Pronto</property>
+                <property name="visible">True</property>
+                <property name="can-focus">True</property>
+                <property name="receives-default">True</property>
+                <property name="halign">start</property>
+                <property name="margin-left">5</property>
+                <property name="margin-right">5</property>
+                <property name="margin-start">5</property>
+                <property name="margin-end">5</property>
+                <property name="margin-bottom">10</property>
+                <signal name="clicked" handler="on_ready_clicked" swapped="no"/>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">True</property>
+                <property name="position">1</property>
+              </packing>
+            </child>
           </object>
           <packing>
             <property name="expand">False</property>
@@ -433,7 +494,7 @@
           </packing>
         </child>
         <child>
-          <object class="GtkLabel">
+          <object class="GtkLabel" id="label_error">
             <property name="visible">True</property>
             <property name="can-focus">False</property>
             <property name="margin-start">5</property>
@@ -585,14 +646,40 @@
           </packing>
         </child>
         <child>
-          <object class="GtkProgressBar" id="bar_time">
+          <object class="GtkBox">
             <property name="visible">True</property>
             <property name="can-focus">False</property>
-            <property name="halign">center</property>
-            <property name="valign">center</property>
-            <property name="margin-start">5</property>
-            <property name="margin-end">5</property>
-            <property name="margin-bottom">10</property>
+            <child>
+              <object class="GtkProgressBar" id="bar_time">
+                <property name="visible">True</property>
+                <property name="can-focus">False</property>
+                <property name="margin-left">5</property>
+                <property name="margin-right">5</property>
+                <property name="margin-start">5</property>
+                <property name="margin-end">5</property>
+                <property name="margin-bottom">10</property>
+              </object>
+              <packing>
+                <property name="expand">True</property>
+                <property name="fill">True</property>
+                <property name="position">0</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkLabel" id="label_turnTimer">
+                <property name="visible">True</property>
+                <property name="can-focus">False</property>
+                <property name="margin-start">5</property>
+                <property name="margin-end">5</property>
+                <property name="margin-bottom">10</property>
+                <property name="label" translatable="yes">15</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">True</property>
+                <property name="position">1</property>
+              </packing>
+            </child>
           </object>
           <packing>
             <property name="expand">False</property>
