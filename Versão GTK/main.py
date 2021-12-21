@@ -62,6 +62,12 @@ class Main(Gtk.Window):
         self.chat_text.set_wrap_mode(3) # Corta as mensagens no canto direito do text view
         self.chat_buffer = self.chat_text.get_buffer()
 
+        # Tags para mudar as cores do chat
+        self.tag_green = self.chat_buffer.create_tag("green_fg", foreground="green")
+        self.tag_orange = self.chat_buffer.create_tag("orange_fg", foreground="orange")
+        self.tag_blue = self.chat_buffer.create_tag("blue_fg", foreground="blue")
+        self.tag_red = self.chat_buffer.create_tag("red_fg", foreground="red")
+
         # Text view do jogo
         self.game_text.set_editable(False) # Desabilita a edição do text view, dessa forma só é possível pelo entry
         self.game_text.set_wrap_mode(3) # Corta as mensagens no canto direito do text view
@@ -109,7 +115,7 @@ class Main(Gtk.Window):
     def on_enter(self, widget):
         message = self.chat_entry.get_text().strip()
         self.chat_entry.set_text("")
-        self.socket_send(f'CHAT_TYPE#{self.nickname}: {message}')
+        self.socket_send(f'CHAT_TYPE#text@{self.nickname}: {message}')
         #self.end_mark = self.chat_buffer.create_mark("", self.end_iter, False) # Marcação do ultimo iterador do chat
         #self.chat_text.scroll_to_mark(self.end_mark, 0, False, 0, 0) # Move o scroll para o final
 
@@ -128,6 +134,10 @@ class Main(Gtk.Window):
         #self.sock.send(f'TURN_TYPE#{self.word}'.encode('utf-8'))
         
         self.turn_window.hide()
+
+        self.theme_entry.set_text("")
+        self.tip_entry.set_text("")
+        self.answer_entry.set_text("")
 
     def on_ready_clicked(self, widget):
         if self.status == "Esperando...":
@@ -152,10 +162,9 @@ class Main(Gtk.Window):
             try:
                 msg = self.sock.recv(1024).decode()
                 lista_message = msg.split("$")
-                print(lista_message)
-                print("Recebido:" + msg + "\n")
+                #print(lista_message)
+                #print("Recebido:" + msg + "\n")
                 for i in range(len(lista_message) - 1):
-                    print("Rodou o FOR \n")
                     type, message = lista_message[i].split('#')
                     if type == "NICK_TYPE":
                         self.players_treeiter = self.players_store.append([message, "Esperando..."]) # Adiciona o jogador na lista do launcher
@@ -164,8 +173,19 @@ class Main(Gtk.Window):
                         print("Passou por NICK\n")
 
                     if type == "CHAT_TYPE":
+                        second_type, msg = message.split('@')
                         end_iter = self.chat_buffer.get_end_iter()
-                        self.chat_buffer.insert(end_iter, message + "\n") # Adiciona uma nova mensagem no final do chat
+                        self.chat_buffer.insert(end_iter, msg + "\n") # Adiciona uma nova mensagem no final do chat
+                        last_line = self.chat_buffer.get_line_count()
+                        iter_last_line = self.chat_buffer.get_iter_at_line(last_line - 2)
+                        end_iter = self.chat_buffer.get_end_iter()
+
+                        if second_type == 'text': pass
+                        if second_type == 'win': self.chat_buffer.apply_tag(self.tag_green, iter_last_line, end_iter)
+                        if second_type == 'try': self.chat_buffer.apply_tag(self.tag_orange, iter_last_line, end_iter)
+                        if second_type == 'turn': self.chat_buffer.apply_tag(self.tag_blue, iter_last_line, end_iter)
+                        if second_type == 'error': self.chat_buffer.apply_tag(self.tag_red, iter_last_line, end_iter)
+                            
                         print("Passou por CHAT\n")
 
                     if type == "SCORE_TYPE":
@@ -175,7 +195,7 @@ class Main(Gtk.Window):
                                 treeiter = self.score_store.get_iter(path) # Recebe o iterador da linha
                                 value = self.score_store.get_value(treeiter, 0) # Recebe o nick dessa linha
                                 if value == nick:
-                                    self.players_store[treeiter][1] = points # Muda a pontuação
+                                    self.score_store[treeiter][1] = points # Muda a pontuação
                                     break
                         print("Passou por SCORE\n")
 
@@ -212,11 +232,24 @@ class Main(Gtk.Window):
                         print(lista)
                         if lista[0] != '':
                             for player in lista:
-                                nick, status = player.split(":")
+                                nick, status, score = player.split(":")
                                 self.players_treeiter = self.players_store.append([nick, status]) # Adiciona o jogador na lista do launcher
-                                self.score_treeiter = self.score_store.append([nick, "0"]) # Mostra o nick e pontuação do jogador
+                                self.score_treeiter = self.score_store.append([nick, score]) # Mostra o nick e pontuação do jogador
                                 self.count_players += 1
                         print("Passou por PLAYERS")
+
+                    if type == "LIST_TYPE":
+                        lista = message.split("/")
+                        print(lista)
+                        for i in range(self.count_players-1):
+                            path = Gtk.TreePath(0) # Seta a linha da coluna a procurar
+                            treeiter = self.score_store.get_iter(path) # Recebe o iterador da linha
+                            self.score_store.remove(treeiter) # Remove conteúdo da linha
+                            print("Rodou\n")
+                        for player in lista:
+                            nick, score = player.split(":")
+                            self.score_treeiter = self.score_store.append([nick, score]) # Mostra o nick e pontuação do jogador
+                        print("Passou por list")
 
                     if type == "START_TYPE":
                         GLib.idle_add(lambda: self.gameWindow.show())
@@ -231,11 +264,14 @@ class Main(Gtk.Window):
                                 GLib.idle_add(lambda: self.game_label.set_text(f"{time}"))
                         if message == 'time_out_turn':
                             self.socket_send(f'TURN_TYPE#{self.word}')
+                            self.word = ""
                             GLib.idle_add(lambda: self.turn_window.hide())
                             self.socket_send('TIMER_TYPE#time_out_turn')
                         if message == 'time_out_game':
+                            GLib.idle_add(lambda: self.turn_label.set_text("0"))
                             self.socket_send('TIMER_TYPE#time_out_game')
-                        print("Passou por TIMER\n")
+
+                        #print("Passou por TIMER\n")
 
                     if type == "DISCONNECT_TYPE":
                         for i in range(self.count_players): # Passa por todos jogadores comparando o nick
@@ -264,6 +300,7 @@ class Main(Gtk.Window):
                 print(f"Este except (socket_recv): {e}!\n")
                 print("Você foi desconectado do servidor")
                 self.sock.close()
+                #sys.exit()
                 break
 
     def socket_send(self, message_input):
